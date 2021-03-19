@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<title>Visualization Programming with D3.JS</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+<!-- Load color scale -->
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+
+<style>
+html,body,h1,h2,h3,h4,h5,h6 {font-family: "Roboto", sans-serif;}
+.w3-sidebar {
+  z-index: 3;
+  width: 250px;
+  top: 43px;
+  bottom: 0;
+  height: inherit;
+}
+</style>
+<body>
+
+<!-- Navbar -->
+<div class="w3-top">
+  <div class="w3-bar w3-theme w3-top w3-left-align w3-large">
+    <a class="w3-bar-item w3-button w3-right w3-hide-large w3-hover-white w3-large w3-theme-l1" href="javascript:void(0)" onclick="w3_open()"><i class="fa fa-bars"></i></a>
+    <!-- <a href="#" class="w3-bar-item w3-button w3-theme-l1">Logo</a> -->
+    <a href="index.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Heatmap</a>
+    <a href="#" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Bubble Chart</a>
+    <a href="scatter_plot.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Scatter Plot</a>
+    <a href="density_plot.html" class="w3-bar-item w3-button w3-hide-small w3-hover-white">Density Plot</a>
+    <a href="histogram.html" class="w3-bar-item w3-button w3-hide-small w3-hide-medium w3-hover-white">Histogram</a>
+  </div>
+</div>
+
+<!-- Sidebar -->
+<nav class="w3-sidebar w3-bar-block w3-collapse w3-large w3-theme-l5 w3-animate-left" id="mySidebar">
+  <a href="javascript:void(0)" onclick="w3_close()" class="w3-right w3-xlarge w3-padding-large w3-hover-black w3-hide-large" title="Close Menu">
+    <i class="fa fa-remove"></i>
+  </a>
+  <h4 class="w3-bar-item"><b>Visualizations</b></h4>
+  <p><b>Dataset:</b> a1-films.csv</p>
+  <p><b>Interactivity</b></p>
+  <p>The bubble chart allows the user interaction by providing tooltip information
+    when the user hovers the cursor over a bubble of interest
+  </p>
+  <p>The tooltip information consists of the Name of the film, its Subject, and its Popularity</p>
+</nav>
+
+<!-- Overlay effect when opening sidebar on small screens -->
+<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+
+<!-- Main content: shift it to the right by 250 pixels when the sidebar is visible -->
+<div class="w3-main" style="margin-left:300px">
+
+  <div class="w3-row w3-padding-64">
+    <div class="w3-twothird w3-container">
+        <h1 class="w3-text-teal">Data Visualization using D3.js: Bubble Chart</h1>
+
+        <!-- div for graph -->
+        <div id="my_dataviz">
+            <script>
+
+                // set the dimensions and margins of the graph
+                var margin = {top: 10, right: 20, bottom: 30, left: 50},
+                    width = 700 - margin.left - margin.right,
+                    height = 450 - margin.top - margin.bottom;
+
+                // append the svg object to the body of the page
+                var svg = d3.select("#my_dataviz")
+                .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                    .attr("transform",
+                        "translate(" + margin.left + "," + margin.top + ")");
+
+                //Read the data
+                d3.csv("https://raw.githubusercontent.com/IsaacMwendwa/dataViz/main/a1-film.csv", function(data) {
+
+                // Defining graph title and axis labels
+                const xAxisLabel = "Year";
+                const yAxisLabel = "Length";
+                const title = `Bubble Chart of Films' Popularity vs ${yAxisLabel} and ${xAxisLabel} of Production`;
+
+                //Create Title 
+                svg.append("text")
+                    .attr("x", width / 2 )
+                    .attr("y", 0)
+                    .style("text-anchor", "middle")
+                    .text(title);
+
+                //Create X axis label   
+                svg.append("text")
+                    .attr("x", width / 2 )
+                    .attr("y",  height + margin.bottom)
+                    .style("text-anchor", "middle")
+                    .text(xAxisLabel);
+
+                //Create Y axis label
+                svg.append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 0-margin.left)
+                    .attr("x",0 - (height / 2))
+                    .attr("dy", "1em")
+                    .style("text-anchor", "middle")
+                    .text(yAxisLabel);  
+                
+                // Add X axis
+                var x = d3.scaleLinear()
+                    .domain([1920, 2000])
+                    .range([ 0, width ]);
+                svg.append("g")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x));
+
+                // Add Y axis
+                var y = d3.scaleLinear()
+                    .domain([0, 200])
+                    .range([ height, 0]);
+                svg.append("g")
+                    .call(d3.axisLeft(y));
+
+                // Add a scale for bubble size
+                var z = d3.scaleLinear()
+                    .domain([0, 200])
+                    .range([ 0, 20]);
+
+                // Add a scale for bubble color
+                var myColor = d3.scaleOrdinal()
+                    .domain(["Action", "Drama", "Comedy", "War", "Mystery", "Horror", "Westerns", "Science Fiction"])
+                    .range(d3.schemeSet2);
+
+                // -1- Create a tooltip div that is hidden by default:
+                var tooltip = d3.select("#my_dataviz")
+                    .append("div")
+                    .style("opacity", 0)
+                    .attr("class", "tooltip")
+                    .style("background-color", "black")
+                    .style("border-radius", "5px")
+                    .style("padding", "10px")
+                    .style("color", "white")
+
+                // -2- Create 3 functions to show / update (when mouse move but stay on same circle) / hide the tooltip
+                var showTooltip = function(d) {
+                    tooltip
+                    .transition()
+                    .duration(200)
+                    tooltip
+                    .style("opacity", 1)
+                    .html("Film: " + d.Title + " Subject: " + d.Subject + " Popularity: " + d.Popularity)
+                    .style("left", (d3.mouse(this)[0]+30) + "px")
+                    .style("top", (d3.mouse(this)[1]+30) + "px")
+                }
+                var moveTooltip = function(d) {
+                    tooltip
+                    .style("left", (d3.mouse(this)[0]+30) + "px")
+                    .style("top", (d3.mouse(this)[1]+30) + "px")
+                }
+                var hideTooltip = function(d) {
+                    tooltip
+                    .transition()
+                    .duration(200)
+                    .style("opacity", 0)
+                }
+
+                // Add dots
+                svg.append('g')
+                    .selectAll("dot")
+                    .data(data)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "bubbles")
+                    .attr("cx", function (d) { return x(d.Year); } )
+                    .attr("cy", function (d) { return y(d.Length); } )
+                    .attr("r", function (d) { return z(d.Popularity); } )
+                    .style("fill", function (d) { return myColor(d.Subject); } )
+                    // -3- Trigger the functions
+                    .on("mouseover", showTooltip )
+                    .on("mousemove", moveTooltip )
+                    .on("mouseleave", hideTooltip )
+
+                })
+            </script>
+        </div>
+      
+
+
+    </div>
+  </div>
+
+  <div class="w3-row">
+    <div class="w3-twothird w3-container">
+      <h3 class="w3-text-teal">Description of Results</h3>
+      <p>The size of the bubble depicts the popularity level of the film. This implies that the 
+        biggger the bubble, the more popular the film
+      </p>
+      <p>The bubble chart shows that the films which are most popular are those which have Drama as their subject.
+        Moreover, the bubble plot depicts that most films have a length of between 90-140 minutes.
+      </p>
+      <p>The bubble chart also shows that films released between 1980 and 1990 are the most popular, owing to
+        the visibly large-size bubbles representing films released in that period
+      </p>
+      
+
+
+
+
+    </div>
+  </div>
+
+  <footer id="myFooter">
+    <div class="w3-container w3-theme-l2 w3-padding-32">
+      <h4>Visualization Programming with D3.js</h4>
+    </div>
+  </footer>
+
+<!-- END MAIN -->
+</div>
+
+<script>
+// Get the Sidebar
+var mySidebar = document.getElementById("mySidebar");
+
+// Get the DIV with overlay effect
+var overlayBg = document.getElementById("myOverlay");
+
+// Toggle between showing and hiding the sidebar, and add overlay effect
+function w3_open() {
+  if (mySidebar.style.display === 'block') {
+    mySidebar.style.display = 'none';
+    overlayBg.style.display = "none";
+  } else {
+    mySidebar.style.display = 'block';
+    overlayBg.style.display = "block";
+  }
+}
+
+// Close the sidebar with the close button
+function w3_close() {
+  mySidebar.style.display = "none";
+  overlayBg.style.display = "none";
+}
+</script>
+
+</body>
+</html>
+
+
+  
+  
+
+
